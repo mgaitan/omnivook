@@ -38,57 +38,57 @@ jobs:
         # attachments: ${{ steps.find_ebook.outputs.EPUB_FILE }}
 
 
-    - name: Checkout code
-      uses: actions/checkout@v3
+    # - name: Checkout code
+    #   uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+    # - name: Set up Python
+    #   uses: actions/setup-python@v4
+    #   with:
+    #     python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        pip install omnivoreql
-        sudo apt-get install -y pandoc
+    # - name: Install dependencies
+    #   run: |
+    #     pip install omnivoreql
+    #     sudo apt-get install -y pandoc
         
-    - name: Generate eBook
-      env:
-        OMNIVORE_TOKEN: ${{ secrets.OMNIVORE_TOKEN }}
-      run: |
-        SINCE_DATE="${{ inputs.since }}"
-        if [ -z "$SINCE_DATE" ]; then
-          SINCE_DATE=$(date -d '1 day ago' +%Y-%m-%d)
-        fi
+    # - name: Generate eBook
+    #   env:
+    #     OMNIVORE_TOKEN: ${{ secrets.OMNIVORE_TOKEN }}
+    #   run: |
+    #     SINCE_DATE="${{ inputs.since }}"
+    #     if [ -z "$SINCE_DATE" ]; then
+    #       SINCE_DATE=$(date -d '1 day ago' +%Y-%m-%d)
+    #     fi
         
-        ARCHIVE_FLAG=""
-        if [ ${{ inputs.archive }} ]; then
-          ARCHIVE_FLAG="--archive"
-        fi
+    #     ARCHIVE_FLAG=""
+    #     if [ ${{ inputs.archive }} ]; then
+    #       ARCHIVE_FLAG="--archive"
+    #     fi
         
-        python omnivook.py --label=${{ inputs.label }} --since $SINCE_DATE $ARCHIVE_FLAG
+    #     python omnivook.py --label=${{ inputs.label }} --since $SINCE_DATE $ARCHIVE_FLAG
     
-    - name: Find the generated eBook
-      id: find_ebook
-      run: |
-        EPUB_FILE=$(ls *.epub 2>/dev/null || true)
-        echo "EPUB_FILE=$EPUB_FILE" >> $GITHUB_OUTPUT
+    # - name: Find the generated eBook
+    #   id: find_ebook
+    #   run: |
+    #     EPUB_FILE=$(ls *.epub 2>/dev/null || true)
+    #     echo "EPUB_FILE=$EPUB_FILE" >> $GITHUB_OUTPUT
 
-    - name: Upload eBook as artifact
-      if: steps.find_ebook.outputs.EPUB_FILE != ''
-      uses: actions/upload-artifact@v3
-      with:
-        name: Omnivook-eBook-${{ github.run_id }}
-        path: ${{ steps.find_ebook.outputs.EPUB_FILE }}
+    # - name: Upload eBook as artifact
+    #   if: steps.find_ebook.outputs.EPUB_FILE != ''
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: Omnivook-eBook-${{ github.run_id }}
+    #     path: ${{ steps.find_ebook.outputs.EPUB_FILE }}
 
-    - name: Send eBook via email
-      if: steps.find_ebook.outputs.EPUB_FILE != ''
-      uses: dawidd6/action-send-mail@v3
-      with:
-        connection_url: ${{ secrets.MAIL_TO }} 
-        subject: "Your Omnivook"
-        body: "Attached is your new Omnivook eBook."
-        to: ${{ secrets.MAIL_TO }}
-        from: ${{ secrets.MAIL_FROM }}
-        server_port: 465
-        secure: true
-        attachments: ${{ steps.find_ebook.outputs.EPUB_FILE }}
+    # - name: Send eBook via email
+    #   if: steps.find_ebook.outputs.EPUB_FILE != ''
+    #   uses: dawidd6/action-send-mail@v3
+    #   with:
+    #     connection_url: ${{ secrets.MAIL_TO }} 
+    #     subject: "Your Omnivook"
+    #     body: "Attached is your new Omnivook eBook."
+    #     to: ${{ secrets.MAIL_TO }}
+    #     from: ${{ secrets.MAIL_FROM }}
+    #     server_port: 465
+    #     secure: true
+    #     attachments: ${{ steps.find_ebook.outputs.EPUB_FILE }}
