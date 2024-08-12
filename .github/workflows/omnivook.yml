@@ -66,14 +66,14 @@ jobs:
         server_address: ${{ secrets.SERVER }} 
         subject: "Your Omnivook"
         body: "Attached is your new Omnivook eBook."
-        to: gaitan@gmail.com
+        to: ${{ secrets.MAIL_TO }}
         from: ${{ secrets.MAIL_FROM }}
         server_port: 465
         secure: true
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         attachments: ${{ steps.find_ebook.outputs.EPUB_FILE }}
-    
+
     - name: Upload eBook as artifact
       if: steps.find_ebook.outputs.EPUB_FILE != ''
       uses: actions/upload-artifact@v3
