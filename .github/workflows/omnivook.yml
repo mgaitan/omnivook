@@ -67,7 +67,7 @@ jobs:
 
     - name: Send eBook via email
       if: steps.find_ebook.outputs.EPUB_FILE != ''
-      uses: dawidd6/action-send-mail@v4
+      uses: dawidd6/action-send-mail@v3
       with:
         connection_url: ${{ secrets.MAIL_CONNECTION }}
         subject: "Your Omnivook"
