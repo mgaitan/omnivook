@@ -37,6 +37,8 @@ jobs:
         sudo apt-get install -y pandoc
         
     - name: Generate eBook
+      env:
+        OMNIVORE_TOKEN: ${{ secrets.OMNIVORE_TOKEN }}
       run: |
         SINCE_DATE="${{ inputs.since }}"
         if [ -z "$SINCE_DATE" ]; then

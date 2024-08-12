@@ -11,7 +11,7 @@ from datetime import datetime
 
 from omnivoreql import OmnivoreQL
 
-client = OmnivoreQL(os.environ.get("OMNIVORE_API_TOKEN", "b0a3f5bb-d5f8-4871-af4c-cda9f0045b63"))
+client = OmnivoreQL(os.environ.get("OMNIVORE_TOKEN"))
 
 LABEL = "k"
 YESTERDAY = date.today() - timedelta(days=1)
