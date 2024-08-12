@@ -28,13 +28,15 @@ jobs:
     - name: Test email
       uses: dawidd6/action-send-mail@v3
       with:
-        connection_url: ${{ secrets.MAIL_TO }} 
+        server_address: ${{ secrets.SERVER }} 
         subject: "Your Omnivook"
         body: "Attached is your new Omnivook eBook."
         to: gaitan@gmail.com
         from: ${{ secrets.MAIL_FROM }}
         server_port: 465
         secure: true
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
         # attachments: ${{ steps.find_ebook.outputs.EPUB_FILE }}
 
 
