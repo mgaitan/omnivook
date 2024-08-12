@@ -1,0 +1,75 @@
+name: Generate and Send Omnivook
+
+on:
+  schedule:
+    # Schedule the workflow to run every day at 17:30 Argentina time (20:30 UTC)
+    - cron: '30 20 * * *'
+  workflow_dispatch:
+    inputs:
+      since:
+        description: 'Start date to filter articles (format YYYY-MM-DD)'
+        required: false
+      label:
+        description: 'Label to filter'
+        required: false
+        default: k 
+      archive:
+        description: 'Archive exported articles'
+        type: boolean
+        default: true # default is true; can be set to false
+
+jobs:
+  generate_and_send_ebook:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        pip install omnivoreql
+        sudo apt-get install -y pandoc
+        
+    - name: Generate eBook
+      run: |
+        SINCE_DATE="${{ inputs.since }}"
+        if [ -z "$SINCE_DATE" ]; then
+          SINCE_DATE=$(date -d '1 day ago' +%Y-%m-%d)
+        fi
+        
+        ARCHIVE_FLAG=""
+        if [ ${{ inputs.archive }} ]; then
+          ARCHIVE_FLAG="--archive"
+        fi
+        
+        python omnivook.py --label=${{ inputs.label }} --since $SINCE_DATE $ARCHIVE_FLAG
+    
+    - name: Find the generated eBook
+      id: find_ebook
+      run: |
+        EPUB_FILE=$(ls *.epub 2>/dev/null || true)
+        echo "EPUB_FILE=$EPUB_FILE" >> $GITHUB_OUTPUT
+
+    - name: Upload eBook as artifact
+      if: steps.find_ebook.outputs.EPUB_FILE != ''
+      uses: actions/upload-artifact@v3
+      with:
+        name: Omnivook-eBook-${{ github.run_id }}
+        path: ${{ steps.find_ebook.outputs.EPUB_FILE }}
+
+    - name: Send eBook via email
+      if: steps.find_ebook.outputs.EPUB_FILE != ''
+      uses: dawidd6/action-send-mail@v4
+      with:
+        connection_url: ${{ secrets.MAIL_CONNECTION }}
+        subject: "Your Omnivook"
+        body: "Attached is your new Omnivook eBook."
+        to: ${{ secrets.MAIL_TO }}
+        from: ${{ secrets.MAIL_FROM }}
+        attachments: ${{ steps.find_ebook.outputs.EPUB_FILE }}

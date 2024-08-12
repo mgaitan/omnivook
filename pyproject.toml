@@ -1,0 +1,11 @@
+[project]
+name = "omnivook"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+dependencies = [
+    "omnivoreql",
+]
+
+[tool.uv]
+dev-dependencies = []
