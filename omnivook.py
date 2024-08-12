@@ -87,8 +87,8 @@ def make_book(articles, since=YESTERDAY, convert_to_mobi=False):
                 *glob(f"{d}/*.md"),
                 "--metadata",
                 f'title="{title}"',
-                "--toc",
-                "--toc-depth=1",
+                # "--toc",
+                # "--toc-depth=1",
                 "-o",
                 output,
             ]
