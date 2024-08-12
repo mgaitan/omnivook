@@ -23,6 +23,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+
+    - name: Test email
+      uses: dawidd6/action-send-mail@v3
+      with:
+        connection_url: ${{ secrets.MAIL_TO }} 
+        subject: "Your Omnivook"
+        body: "Attached is your new Omnivook eBook."
+        to: gaitan@gmail.com
+        from: ${{ secrets.MAIL_FROM }}
+        server_port: 465
+        secure: true
+        # attachments: ${{ steps.find_ebook.outputs.EPUB_FILE }}
+
+
     - name: Checkout code
       uses: actions/checkout@v3
 
@@ -69,7 +84,7 @@ jobs:
       if: steps.find_ebook.outputs.EPUB_FILE != ''
       uses: dawidd6/action-send-mail@v3
       with:
-        connection_url: ${{ secrets.MAIL_CONNECTION }} 
+        connection_url: ${{ secrets.MAIL_TO }} 
         subject: "Your Omnivook"
         body: "Attached is your new Omnivook eBook."
         to: ${{ secrets.MAIL_TO }}
