@@ -38,10 +38,9 @@ To trigger the workflow manually with specific parameters:
 
 ## Setup 🔧
 
-### Secrets 🔐
-
 You need to configure the following GitHub Secrets in your repository:
 
+- **`OMNIVORE_TOKEN`**: a.k.a API key. Get yours at https://omnivore.app/settings/api 
 - **`MAIL_CONNECTION`**: The SMTP connection URL in the format: `smtp://user:password@server:port`.
 - **`MAIL_FROM`**: The email address from which the eBook will be sent.
 - **`MAIL_TO`**: The Kindle email address where the eBook will be delivered.
