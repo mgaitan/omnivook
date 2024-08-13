@@ -34,8 +34,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install omnivoreql
-        sudo apt-get install -y pandoc
+        pip install -r requirements.txt
         
     - name: Generate eBook
       env:
@@ -53,14 +52,7 @@ jobs:
         
         python omnivook.py --label=${{ inputs.label }} --since $SINCE_DATE $ARCHIVE_FLAG
     
-    - name: Find the generated eBook
-      id: find_ebook
-      run: |
-        EPUB_FILE=$(ls *.epub 2>/dev/null || true)
-        echo "EPUB_FILE=$EPUB_FILE" >> $GITHUB_OUTPUT
-
     - name: Send eBook via email
-      if: steps.find_ebook.outputs.EPUB_FILE != ''
       uses: dawidd6/action-send-mail@v3
       with:
         server_address: ${{ secrets.SERVER }} 
@@ -72,11 +64,4 @@ jobs:
         secure: true
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
-        attachments: ${{ steps.find_ebook.outputs.EPUB_FILE }}
-
-    - name: Upload eBook as artifact
-      if: steps.find_ebook.outputs.EPUB_FILE != ''
-      uses: actions/upload-artifact@v3
-      with:
-        name: Omnivook-eBook-${{ github.run_id }}
-        path: ${{ steps.find_ebook.outputs.EPUB_FILE }}
+        attachments: _build/epub/omnivook.epub

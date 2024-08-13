@@ -12,7 +12,7 @@ from omnivoreql import OmnivoreQL
 client = OmnivoreQL(os.environ.get("OMNIVORE_TOKEN"))
 
 LABEL = "k"
-YESTERDAY = date.today() - timedelta(days=1)
+YESTERDAY = date.today() - timedelta(days=2)
 
 
 def main():
@@ -29,9 +29,10 @@ def main():
         help="Start date to filter articles (format YYYY-MM-DD)",
     )
     parser.add_argument(
-        "--convert-to-mobi",
-        action="store_true",
-        help="Convert the output to .mobi format",
+        "-o", 
+        "--output-format",
+        default="epub",
+        help="Output format: epub, html, doc",
     )
     parser.add_argument(
         "--archive", action="store_true", help="Archive exported articles"
@@ -39,7 +40,9 @@ def main():
 
     args = parser.parse_args()
     articles = get_articles(args.label, args.since, archive=args.archive)
-    make_book(articles, since=args.since, convert_to_mobi=args.convert_to_mobi)
+    make_book(articles, since=args.since, output_format=args.output_format)
+    return articles
+
 
 
 def get_articles(label=LABEL, since=YESTERDAY, archive=False):
@@ -67,35 +70,40 @@ def get_articles(label=LABEL, since=YESTERDAY, archive=False):
     return articles
 
 
-def make_book(articles, since=YESTERDAY, convert_to_mobi=False):
+def make_book(articles, since=YESTERDAY, output_format='epub'):
+
     if not articles:
         return
-    with tempfile.TemporaryDirectory() as d:
-        for i, art in enumerate(articles):
-            node = art["node"]
-            print(f"processing {node['originalArticleUrl']}")
-            full = f"# {node['title']}\n\n-{node['originalArticleUrl']}\n\n{node['content']}"
-            (Path(d) / f"{i}_{node['slug']}.md").write_text(full)
+    for i, art in enumerate(articles):
+        node = art["node"]
+        print(f"processing {node['originalArticleUrl']}")
+        full = (
+            f"# {node['title']}\n\n"
+            f"{node['originalArticleUrl']}\n\n"
+            f"{node['content']}\n"
+        )
+        (Path("source") / f"{i}_{node['slug']}.md").write_text(full)
 
         date = datetime.today()
         title = f"omnivook {since:%Y-%m-%d} to {date:%Y-%m-%d}"
-        output = f"{title.replace(' ','_')}.epub"
+        output = f"{title.replace(' ','_')}.{output_format}"
         print(f"Generating {output}")
-        subprocess.run(
-            [
-                "pandoc",
-                *glob(f"{d}/*.md"),
-                "--metadata",
-                f'title="{title}"',
-                # "--toc",
-                # "--toc-depth=1",
-                "-o",
-                output,
-            ]
-        )
-        if convert_to_mobi:
-            subprocess.run(["ebook-convert", output, Path(output).with_suffix(".mobi")])
+        subprocess.run(['sphinx-build', '-b', 'epub', 'source', '_build/epub'])
 
+        # subprocess.run(
+        #     [
+        #         "pandoc",
+        #         *glob(f"{d}/*.md"),
+        #         "--epub-metadata=metadata.xml",
+        #         f'--metadata=title:"{title}"',
+        #         '--metadata=author:"Omnivore"',
+        #         "--toc",
+        #         "--toc-depth=1",
+        #         "-o",
+        #         output,
+        #     ]
+        # )
+        
 
 if __name__ == "__main__":
     main()

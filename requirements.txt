@@ -1,0 +1,3 @@
+omnivoreql
+sphinx
+myst-parser
