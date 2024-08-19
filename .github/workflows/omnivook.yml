@@ -12,7 +12,6 @@ on:
       label:
         description: 'Label to filter'
         required: false
-        default: k 
       archive:
         description: 'Archive exported articles'
         type: boolean
@@ -49,8 +48,8 @@ jobs:
         if [ ${{ inputs.archive }} ]; then
           ARCHIVE_FLAG="--archive"
         fi
-        
-        python omnivook.py --label=${{ inputs.label }} --since $SINCE_DATE $ARCHIVE_FLAG
+
+        python omnivook.py --since $SINCE_DATE $ARCHIVE_FLAG
     
     - name: Send eBook via email
       uses: dawidd6/action-send-mail@v3

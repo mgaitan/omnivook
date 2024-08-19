@@ -1,26 +1,21 @@
 import argparse
 import os
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import subprocess
 from pathlib import Path
-from glob import glob
-import tempfile
-from datetime import datetime
 
 from omnivoreql import OmnivoreQL
 
 client = OmnivoreQL(os.environ.get("OMNIVORE_TOKEN"))
 
-LABEL = "k"
-YESTERDAY = date.today() - timedelta(days=2)
-
+YESTERDAY = date.today() - timedelta(days=1)
 
 def main():
     parser = argparse.ArgumentParser(
         description="Generate an ebook from Omnivore articles"
     )
     parser.add_argument(
-        "--label", type=str, default=LABEL, help="Label to filter articles"
+        "--label", type=str, nargs='*', help="Labels to filter articles (optional, can be multiple)"
     )
     parser.add_argument(
         "--since",
@@ -37,23 +32,40 @@ def main():
     parser.add_argument(
         "--archive", action="store_true", help="Archive exported articles"
     )
+    parser.add_argument(
+        "--mode", 
+        type=str, 
+        choices=["all", "retrieve", "build"], 
+        default="all", 
+        help="Operation mode: all (default), retrieve (only get articles), build (only create book)"
+    )
 
     args = parser.parse_args()
-    articles = get_articles(args.label, args.since, archive=args.archive)
-    make_book(articles, since=args.since, output_format=args.output_format)
+
+    if args.mode in ["all", "retrieve"]:
+        articles = get_articles(labels=args.label, since=args.since, archive=args.archive)
+    else:
+        articles = None
+
+    if args.mode in ["all", "build"]:
+        make_book(since=args.since, output_format=args.output_format)
+
     return articles
 
-
-
-def get_articles(label=LABEL, since=YESTERDAY, archive=False):
+def get_articles(labels=None, since=YESTERDAY, archive=False):
     articles = []
     after = 0
+    query = f"in:inbox saved:{since.strftime('%Y-%m-%d')}..* readPosition:<60 sort:saved-desc"
+    if labels:
+        label_query = ' '.join(f"label:{label}" for label in labels)
+        query += f" {label_query}"
+    
     while True:
         page = client.get_articles(
-            format="markdown",
+            # format="markdown",
             after=after,
             include_content=True,
-            query=f"in:inbox saved:{YESTERDAY.strftime("%Y-%m-%d")}..* readPosition:<60 label:{LABEL} sort:saved-asc",
+            query=query,
         )
         articles.extend(page["search"]["edges"])
 
@@ -63,20 +75,12 @@ def get_articles(label=LABEL, since=YESTERDAY, archive=False):
             assert page["search"]["pageInfo"]["totalCount"] == len(articles)
             print(f"{len(articles)} articles retrieved")
             break
-    if archive:
-        print("Archiving...")
-        for art in articles:
-            client.archive_article(art["node"]["id"])
-    return articles
 
-
-def make_book(articles, since=YESTERDAY, output_format='epub'):
-
-    if not articles:
-        return
     for i, art in enumerate(articles):
         node = art["node"]
-        print(f"processing {node['originalArticleUrl']}")
+        print(f"Processing {node['originalArticleUrl']}\n--------------")
+        print(node)
+        
         full = (
             f"# {node['title']}\n\n"
             f"{node['originalArticleUrl']}\n\n"
@@ -84,26 +88,24 @@ def make_book(articles, since=YESTERDAY, output_format='epub'):
         )
         (Path("source") / f"{i}_{node['slug']}.md").write_text(full)
 
-        date = datetime.today()
-        title = f"omnivook {since:%Y-%m-%d} to {date:%Y-%m-%d}"
-        output = f"{title.replace(' ','_')}.{output_format}"
-        print(f"Generating {output}")
-        subprocess.run(['sphinx-build', '-b', 'epub', 'source', '_build/epub'])
+        if archive:
+            print("Archiving...")
+            client.archive_article(node["id"])
+    return articles
 
-        # subprocess.run(
-        #     [
-        #         "pandoc",
-        #         *glob(f"{d}/*.md"),
-        #         "--epub-metadata=metadata.xml",
-        #         f'--metadata=title:"{title}"',
-        #         '--metadata=author:"Omnivore"',
-        #         "--toc",
-        #         "--toc-depth=1",
-        #         "-o",
-        #         output,
-        #     ]
-        # )
-        
+def make_book(since=YESTERDAY, output_format='epub'):
+    source_path = Path("source")
+    md_files = list(source_path.glob("*.md"))
+    
+    if len(md_files) <= 1:  # only index.md
+        print("No articles found to compile.")
+        return
+
+    date = datetime.today()
+    title = f"omnivook {since:%Y-%m-%d} to {date:%Y-%m-%d}"
+    output = f"{title.replace(' ', '_')}.{output_format}"
+    print(f"Generating {output}")
+    subprocess.run(['sphinx-build', '-b', output_format, 'source', f'_build/{output_format}'])
 
 if __name__ == "__main__":
     main()
