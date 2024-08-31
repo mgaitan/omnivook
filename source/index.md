@@ -5,5 +5,5 @@
 :maxdepth: 1
 :caption: Contents:
 
-*_*.md
+*_*
 ```
