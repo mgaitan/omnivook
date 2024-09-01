@@ -10,7 +10,11 @@ from omnivoreql import OmnivoreQL
 from rich.logging import RichHandler
 
 
-logging.basicConfig(level="DEBUG", handlers=[RichHandler(show_time=False, markup=True)], format="%(message)s")
+logging.basicConfig(
+    level="DEBUG",
+    handlers=[RichHandler(show_time=False, markup=True)],
+    format="%(message)s",
+)
 logger = logging.getLogger(__file__)
 
 
@@ -111,14 +115,14 @@ def get_articles(labels=None, since=YESTERDAY, archive=False):
         )["article"]["article"]
 
         node = art["node"]
-        logger.info(f"Processing {node['originalArticleUrl']}\n--------------")
-
+        file_path = (Path("source") / f"{i}_{node['slug']}.md")
+        logger.info(f"Processing {node['originalArticleUrl']} -> {file_path}")
         full = (
             f"# {details['title']}\n\n"
             f"{details['originalArticleUrl']}\n\n"
             f"{details['content']}\n"
         )
-        (Path("source") / f"{i}_{node['slug']}.md").write_text(full)
+        file_path.write_text(full)
 
         if archive:
             logger.info("Archiving...")
@@ -187,14 +191,15 @@ def apply_fix(warning):
     file_path.write_text("\n".join(lines))
 
 
-def run_sphinx_build(max_attempts=3):
+def run_sphinx_build(title=None, max_attempts=3):
     attempt = 0
     warnings = []
 
     while attempt < max_attempts:
         attempt += 1
         logger.info(f"Attempt {attempt} of {max_attempts}...")
-
+        if title:
+            os.environ["EPUB_TITLE"] = title
         # Execute sphinx-build and capture the output
         result = subprocess.run(
             ["sphinx-build", "--keep-going", "-Eab", "epub", "source", "_build/epub"],
@@ -211,7 +216,7 @@ def run_sphinx_build(max_attempts=3):
         # Apply fixes for the warnings
         for warning in warnings:
             apply_fix(warning)
-            
+
         if attempt == max_attempts:
             logger.warning("Max attempts reached. Some warnings may still be present.")
 
@@ -227,7 +232,7 @@ def make_book(since=YESTERDAY, output_format="epub"):
     date = datetime.today()
     title = f"omnivook {since:%Y-%m-%d} to {date:%Y-%m-%d}"
     output = f"{title.replace(' ', '_')}.{output_format}"
-    logger.info(f"Generating {output}")
+    logger.info(f"[bold]Generating {output}")
     run_sphinx_build()
 
 
