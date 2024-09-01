@@ -156,14 +156,16 @@ def apply_fix(warning):
     # Reading the file with pathlib
     lines = file_path.read_text().splitlines()
 
-    # Match-case with flexible regex patterns for different warnings
+    # Match-case with flexible patterns for different warnings
     match reason:
         case reason if "lexer" in reason:
             # Case 1: Remove everything after "```" on the specific line
+            logger.info(f"[green]Fixing lexer at {warning['file']}:{warning['line']}")
             lines[line_number - 1] = re.sub(r"```.*", "```", lines[line_number - 1])
 
         case reason if "header" in reason:
             # Case 2: Adjust header levels based on the warning
+            logger.info(f"[green]Fixing header at {warning['file']}:{warning['line']}")
             match = re.search(r"H(?P<from>\d) to H(?P<to>\d)", reason)
             if match:
                 from_level = int(match.group("from"))
@@ -175,7 +177,12 @@ def apply_fix(warning):
                 lines[line_number - 1] = re.sub(
                     r"^#+", "#" * new_level, lines[line_number - 1]
                 )
-
+        case _:
+            line_content = lines[line_number - 1].strip()
+            logger.warning(
+                f"[yellow]Unhandled warning[/yellow]: {file_path} at line {line_number} due to {reason}\n"
+                f"[yellow]Line Content[/yellow]: {line_content}"
+            )
     # Writing the corrected file back with pathlib
     file_path.write_text("\n".join(lines))
 
@@ -204,10 +211,7 @@ def run_sphinx_build(max_attempts=3):
         # Apply fixes for the warnings
         for warning in warnings:
             apply_fix(warning)
-            logger.info(
-                f"[green]Fixing[/green]: {warning['file']} at line {warning['line']} due to {warning['reason']}"
-            )
-
+            
         if attempt == max_attempts:
             logger.warning("Max attempts reached. Some warnings may still be present.")
 
