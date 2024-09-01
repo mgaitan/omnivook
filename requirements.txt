@@ -1,3 +1,4 @@
 omnivoreql
 sphinx
 myst-parser
+rich
