@@ -10,11 +10,7 @@ from omnivoreql import OmnivoreQL
 from rich.logging import RichHandler
 
 
-logging.basicConfig(
-    level="DEBUG",  # Define el nivel de logging
-    handlers=[RichHandler()],  # Usa RichHandler para formatear la salida
-    format="%(message)s"  # Define el formato de los mensajes
-)
+logging.basicConfig(level="DEBUG", handlers=[RichHandler(show_time=False, markup=True)], format="%(message)s")
 logger = logging.getLogger(__file__)
 
 

@@ -39,6 +39,7 @@ jobs:
       env:
         OMNIVORE_TOKEN: ${{ secrets.OMNIVORE_TOKEN }}
         FORCE_COLOR: 1
+        COLUMNS: 120
       run: |
         SINCE_DATE="${{ inputs.since }}"
         if [ -z "$SINCE_DATE" ]; then
