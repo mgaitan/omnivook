@@ -56,7 +56,7 @@ jobs:
     - name: Send eBook via email
       uses: dawidd6/action-send-mail@v3
       with:
-        server_address: ${{ secrets.SERVER }} 
+        connection_url: ${{ secrets.MAIL_CONNECTION }} 
         subject: "Your Omnivook"
         body: "Attached is your new Omnivook eBook."
         to: ${{ secrets.MAIL_TO }}
