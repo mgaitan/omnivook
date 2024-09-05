@@ -181,6 +181,9 @@ def apply_fix(warning):
                 lines[line_number - 1] = re.sub(
                     r"^#+", "#" * new_level, lines[line_number - 1]
                 )
+        case reason if "cross-reference target" in reason:
+            lines[line_number - 1] = re.sub(r"\[\]\(#.*?\)", "", lines[line_number - 1])
+
         case _:
             line_content = lines[line_number - 1].strip()
             logger.warning(
