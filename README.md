@@ -7,7 +7,7 @@ Automates the process of generating an eBook from [Omnivore](https://omnivore.ap
 
 ### Automated Daily Run ⏰
 
-Every article saved in the last day that hasn't been read (`readPosition:<60`) and isn't archived with the label `k` will be sent as a book automatically every day at 17:30 Argentina time (20:30 UTC). 
+Every article saved in the last day that hasn't been read (`readPosition:<60`) and isn't archived will be sent as a book automatically every day at 17:30 Argentina time (20:30 UTC). 
 
 ### Manual Trigger 🔧
 
@@ -15,17 +15,7 @@ You can manually trigger the workflow from the GitHub Actions tab. When triggeri
 
 - **SINCE**: Specify the start date to filter articles (format `YYYY-MM-DD`). If not provided, defaults to the previous day.
 - **archive**: A boolean flag (`true` or `false`) that determines whether to archive the articles after processing. Defaults to `true`.
-- **label**: Specify the label to filter articles.
-
-### Example 💡
-
-To trigger the workflow manually with specific parameters:
-
-1. Go to the **Actions** tab in your GitHub repository.
-2. Select the "Generate and Send Omnivook" workflow.
-3. Click on "Run workflow."
-4. Enter the desired values for `SINCE`, `archive`, and `label`.
-5. Click "Run workflow."
+- **label**: Specify a label to filter articles.
 
 ## Features ✨
 
@@ -35,10 +25,9 @@ To trigger the workflow manually with specific parameters:
 - **Email Delivery**: The generated eBook is sent directly to a specified Kindle email address.
 - **Artifact Storage**: Each generated eBook is also uploaded as an artifact in GitHub, allowing for easy retrieval.
 
-
 ## Setup 🔧
 
-You need to configure the following GitHub Secrets in your repository:
+You need to configure the following [GitHub Secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) in your repository:
 
 - **`OMNIVORE_TOKEN`**: a.k.a API key. Get yours at https://omnivore.app/settings/api 
 - **`MAIL_CONNECTION`**: The SMTP connection URL in the format: `smtp://user:password@server:port`.
