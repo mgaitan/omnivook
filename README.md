@@ -23,13 +23,23 @@ You can manually trigger the workflow from the GitHub Actions tab. When triggeri
 - **Manual Triggering**: You can manually trigger the workflow at any time, with configurable options for the start date (`SINCE`) and whether to archive processed articles.
 - **Conditional Execution**: The workflow checks if any articles were processed and only sends the eBook and uploads it as an artifact if one was generated.
 - **Email Delivery**: The generated eBook is sent directly to a specified Kindle email address.
-- **Artifact Storage**: Each generated eBook is also uploaded as an artifact in GitHub, allowing for easy retrieval.
+
 
 ## Setup 🔧
 
 You need to configure the following [GitHub Secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) in your repository:
 
 - **`OMNIVORE_TOKEN`**: a.k.a API key. Get yours at https://omnivore.app/settings/api 
-- **`MAIL_CONNECTION`**: The SMTP connection URL in the format: `smtp://user:password@server:port`.
+- **`MAIL_CONNECTION`**: The SMTP connection URL in the format: `smtp://user:password@server:port`. If this is set, you don't need to provide `SERVER`, `USERNAME`, `PASSWORD`, `SERVER_PORT`, or `SECURE`.
 - **`MAIL_FROM`**: The email address from which the eBook will be sent.
 - **`MAIL_TO`**: The Kindle email address where the eBook will be delivered.
+
+Alternatively, if `MAIL_CONNECTION` is not set, you can configure the following secrets individually:
+
+- **`SERVER`**: The SMTP server address.
+- **`USERNAME`**: The SMTP username.
+- **`PASSWORD`**: The SMTP password.
+- **`SERVER_PORT`**: The SMTP server port (optional, defaults to `465`).
+- **`SECURE`**: Whether the SMTP connection is secure (optional, defaults to `true`).
+
+This setup relies on the [action-send-mail](https://github.com/dawidd6/action-send-mail) GitHub Action for sending emails.
