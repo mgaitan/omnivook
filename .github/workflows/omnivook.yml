@@ -1,24 +1,10 @@
 name: Generate and Send Omnivook
 
 on:
-  schedule:
-    # Schedule the workflow to run every day at 17:30 Argentina time (20:30 UTC)
-    - cron: '30 20 * * *'
   workflow_dispatch:
-    inputs:
-      since:
-        description: 'Start date to filter articles (format YYYY-MM-DD)'
-        required: false
-      label:
-        description: 'Label to filter'
-        required: false
-      archive:
-        description: 'Archive exported articles'
-        type: boolean
-        default: true # default is true; can be set to false
 
 jobs:
-  generate_and_send_ebook:
+  send_mail:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,43 +12,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        
-    - name: Generate eBook
-      env:
-        OMNIVORE_TOKEN: ${{ secrets.OMNIVORE_TOKEN }}
-        FORCE_COLOR: 1
-        COLUMNS: 120
-      run: |
-        SINCE_DATE="${{ inputs.since }}"
-        if [ -z "$SINCE_DATE" ]; then
-          SINCE_DATE=$(date -d '1 day ago' +%Y-%m-%d)
-        fi
-        
-        ARCHIVE_FLAG=""
-        if [ ${{ inputs.archive }} ]; then
-          ARCHIVE_FLAG="--archive"
-        fi
-
-        python omnivook.py --since $SINCE_DATE $ARCHIVE_FLAG
-    
-    - name: Send eBook via email
+    - name: Send  email
       uses: dawidd6/action-send-mail@v3
       with:
-        server_address: ${{ secrets.SERVER }} 
-        subject: "Your Omnivook"
-        body: "Attached is your new Omnivook eBook."
+        connection_url: ${{ secrets.MAIL_CONNECTION }} 
+        subject: "Test from Omnivook"
+        body: "via connection url Omnivook eBook."
         to: ${{ secrets.MAIL_TO }}
         from: ${{ secrets.MAIL_FROM }}
-        server_port: 465
-        secure: true
-        username: ${{ secrets.USERNAME }}
-        password: ${{ secrets.PASSWORD }}
-        attachments: _build/epub/omnivook.epub
