@@ -18,5 +18,5 @@ jobs:
         connection_url: ${{ secrets.MAIL_CONNECTION }} 
         subject: "Test from Omnivook"
         body: "via connection url Omnivook eBook."
-        to: ${{ secrets.MAIL_TO }}
+        to: gaitan@gmail.com
         from: ${{ secrets.MAIL_FROM }}
