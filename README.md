@@ -37,4 +37,4 @@ You need to configure the following [GitHub Secrets](https://docs.github.com/en/
 You can overwrite this environment variables if you want to change the dinamic setup of:
 - **PROJECT_NAME** = a.k.a the file name of the epub. Default to omnivook_since_`<DATE>`_to_`<DATE>`.epub
 - **EPUB_TITLE**: a.k.a the title of the document. Default to omnivook since `<DATE>` to `<DATE>`
-- **EPUB_AUTHORS**: a.k.a  List of site names of all the articles
+- **EPUB_AUTHORS**: a.k.a  List of site names of all the articles. Default set to author of package
