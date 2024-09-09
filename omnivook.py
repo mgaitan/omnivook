@@ -226,7 +226,7 @@ def run_sphinx_build(title=None, max_attempts=3):
             logger.warning("Max attempts reached. Some warnings may still be present.")
 
 
-def make_book(since=YESTERDAY, output_format="epub", authors_pages: list = None) -> None:
+def make_book(since=YESTERDAY, output_format="epub", authors_pages: list | None = None) -> None:
     source_path = Path("source")
     md_files = list(source_path.glob("*.md"))
 
