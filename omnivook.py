@@ -237,10 +237,9 @@ def make_book(since=YESTERDAY, output_format="epub", authors_pages: list = None)
     date = datetime.today()
     title = f"omnivook {since:%Y-%m-%d} to {date:%Y-%m-%d}"
     output = f"{title.replace(' ', '_')}.{output_format}"
-    os.environ["PROJECT_NAME"] = os.environ.get("PROJECT_NAME", f"{title.replace(' ', '_')}")
-    os.environ["EPUB_TITLE"] = os.environ.get("EPUB_TITLE", title)
-    authors_sites = ",".join(authors_pages)
-    os.environ["EPUB_AUTHORS"] = os.environ.get("EPUB_AUTHORS", authors_sites)
+    os.environ.setdefault("PROJECT_NAME", title.replace(' ', '_'))
+    os.environ.setdefault("EPUB_TITLE", title)
+    os.environ.setdefault("EPUB_AUTHORS", ",".join(authors_pages))
     logger.info(f"[bold]Generating {output}")
     run_sphinx_build()
 
