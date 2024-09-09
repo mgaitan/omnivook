@@ -80,7 +80,7 @@ def main():
     else:
         articles = None
 
-    articles_authors_pages = [art.get('node').get('siteName') for art in articles if art['node']['siteName']]
+    articles_authors_pages = [site_name for art in articles if (site_name := art['node']['siteName'])]
 
     if args.mode in ["all", "build"]:
         make_book(since=args.since, output_format=args.output_format, authors_pages=articles_authors_pages)
