@@ -2,13 +2,15 @@ import argparse
 import logging
 import os
 import re
+import shutil
 import subprocess
+import tempfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
+import importlib.resources as pkg_resources 
 
 from omnivoreql import OmnivoreQL
 from rich.logging import RichHandler
-
 
 logging.basicConfig(
     level="DEBUG",
@@ -17,19 +19,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__file__)
 
-
 __client = None
 __username = None
 
 YESTERDAY = date.today() - timedelta(days=1)
-
 
 def get_client() -> OmnivoreQL:
     global __client
     if __client is None:
         __client = OmnivoreQL(os.environ.get("OMNIVORE_TOKEN"))
     return __client
-
 
 def get_username() -> str:
     global __username
@@ -38,53 +37,16 @@ def get_username() -> str:
     return __username
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Generate an ebook from Omnivore articles"
-    )
-    parser.add_argument(
-        "--label",
-        type=str,
-        nargs="*",
-        help="Labels to filter articles (optional, can be multiple)",
-    )
-    parser.add_argument(
-        "--since",
-        type=lambda s: datetime.strptime(s, "%Y-%m-%d").date(),
-        default=YESTERDAY,
-        help="Start date to filter articles (format YYYY-MM-DD)",
-    )
-    parser.add_argument(
-        "-o",
-        "--output-format",
-        default="epub",
-        help="Output format: epub, html, doc",
-    )
-    parser.add_argument(
-        "--archive", action="store_true", help="Archive exported articles"
-    )
-    parser.add_argument(
-        "--mode",
-        type=str,
-        choices=["all", "retrieve", "build"],
-        default="all",
-        help="Operation mode: all (default), retrieve (only get articles), build (only create book)",
-    )
+def setup_source_folder():
+    """Set up a temporary folder with the necessary Sphinx configuration."""
+    temp_dir = Path(tempfile.mkdtemp())
 
-    args = parser.parse_args()
+    # Acceder a los archivos del directorio `source_template` dentro del paquete
+    with pkg_resources.path("omnivook", "source_template") as source_template:
+        shutil.copytree(source_template, temp_dir / "source")
 
-    if args.mode in ["all", "retrieve"]:
-        articles = get_articles(
-            labels=args.label, since=args.since, archive=args.archive
-        )
-    else:
-        articles = None
-
-    if args.mode in ["all", "build"]:
-        make_book(since=args.since, output_format=args.output_format)
-
-    return articles
-
+    return temp_dir
+    
 
 def get_articles(labels=None, since=YESTERDAY, archive=False):
     articles = []
@@ -129,13 +91,8 @@ def get_articles(labels=None, since=YESTERDAY, archive=False):
             client.archive_article(details["id"])
     return articles
 
-
 def extract_warnings(output):
     # Regex to capture the details of the warnings
-    warning_pattern = re.compile(
-        r"(?P<file>source/[^:]+):(?P<line>\d+): WARNING: (?P<reason>.+)"
-    )
-
     warning_pattern = re.compile(
         r"(?P<file>source/[^:]+):(?P<line>\d+): WARNING: (?P<reason>.+)"
     )
@@ -150,7 +107,6 @@ def extract_warnings(output):
         warnings.append(warning_data)
 
     return warnings
-
 
 def apply_fix(warning):
     file_path = Path(warning["file"].replace(".md.md", ".md"))
@@ -194,7 +150,7 @@ def apply_fix(warning):
     file_path.write_text("\n".join(lines))
 
 
-def run_sphinx_build(title=None, max_attempts=3):
+def run_sphinx_build(source_dir, title=None, max_attempts=3):
     attempt = 0
     warnings = []
 
@@ -205,7 +161,7 @@ def run_sphinx_build(title=None, max_attempts=3):
             os.environ["EPUB_TITLE"] = title
         # Execute sphinx-build and capture the output
         result = subprocess.run(
-            ["sphinx-build", "--keep-going", "-Eab", "epub", "source", "_build/epub"],
+            ["sphinx-build", "--keep-going", "-Eab", "epub", source_dir, str(source_dir / "_build" / "epub")],
             text=True,
             stderr=subprocess.PIPE,  # Capture only stderr for warnings
         )
@@ -225,7 +181,8 @@ def run_sphinx_build(title=None, max_attempts=3):
 
 
 def make_book(since=YESTERDAY, output_format="epub"):
-    source_path = Path("source")
+    temp_dir = setup_source_folder()  # Set up temporary source folder
+    source_path = temp_dir / "source"
     md_files = list(source_path.glob("*.md"))
 
     if len(md_files) <= 1:  # only index.md
@@ -236,7 +193,58 @@ def make_book(since=YESTERDAY, output_format="epub"):
     title = f"omnivook {since:%Y-%m-%d} to {date:%Y-%m-%d}"
     output = f"{title.replace(' ', '_')}.{output_format}"
     logger.info(f"[bold]Generating {output}")
-    run_sphinx_build()
+    run_sphinx_build(source_dir=source_path, title=title)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generate an ebook from Omnivore articles"
+    )
+    parser.add_argument(
+        "--label",
+        type=str,
+        nargs="*",
+        help="Labels to filter articles (optional, can be multiple)",
+    )
+    parser.add_argument(
+        "--since",
+        type=lambda s: datetime.strptime(s, "%Y-%m-%d").date(),
+        default=YESTERDAY,
+        help="Start date to filter articles (format YYYY-MM-DD)",
+    )
+    parser.add_argument(
+        "-o",
+        "--output-format",
+        default="epub",
+        help="Output format: epub, html, doc",
+    )
+    parser.add_argument(
+        "--archive", action="store_true", help="Archive exported articles"
+    )
+    parser.add_argument(
+        "--mode",
+        type=str,
+        choices=["all", "retrieve", "build"],
+        default="all",
+        help="Operation mode: all (default), retrieve (only get articles), build (only create book)",
+    )
+
+    args = parser.parse_args()
+
+    temp_dir = setup_source_folder()  # Set up the temporary folder
+    os.chdir(temp_dir / "source")  # Change to the source directory
+
+    if args.mode in ["all", "retrieve"]:
+        articles = get_articles(
+            labels=args.label, since=args.since, archive=args.archive
+        )
+    else:
+        articles = None
+
+    if args.mode in ["all", "build"]:
+        make_book(since=args.since, output_format=args.output_format)
+
+    return articles
 
 
 if __name__ == "__main__":

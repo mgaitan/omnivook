@@ -1,11 +1,22 @@
 [project]
 name = "omnivook"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.1.1"
+description = "A tool to generate ebooks from Omnivore articles"
 readme = "README.md"
 dependencies = [
     "omnivoreql",
+    "sphinx",
+    "rich",
 ]
 
-[tool.uv]
-dev-dependencies = []
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["omnivook"]
+include-package-data = true
+package-data = {"omnivook" = ["source_template/*"]}
+
+[project.scripts]
+omnivook = "omnivook:main"
