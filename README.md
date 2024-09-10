@@ -43,3 +43,8 @@ Alternatively, if `MAIL_CONNECTION` is not set, you can configure the following 
 - **`SECURE`**: Whether the SMTP connection is secure (optional, defaults to `true`).
 
 This setup relies on the [action-send-mail](https://github.com/dawidd6/action-send-mail) GitHub Action for sending emails.
+
+You can overwrite these environment variables if you want to change the dynamic setup of:
+- **`PROJECT_NAME`** = a.k.a the file name of the epub. Default to omnivook_since_`<DATE>`_to_`<DATE>`.epub
+- **`EPUB_TITLE`**: a.k.a the title of the document. Default to omnivook since `<DATE>` to `<DATE>`
+- **`EPUB_AUTHORS`**: a.k.a  List of site names of all the articles. Default set to the author of the package

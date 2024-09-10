@@ -80,8 +80,10 @@ def main():
     else:
         articles = None
 
+    articles_authors_pages = [site_name for art in articles if (site_name := art['node']['siteName'])]
+
     if args.mode in ["all", "build"]:
-        make_book(since=args.since, output_format=args.output_format)
+        make_book(since=args.since, output_format=args.output_format, authors_pages=articles_authors_pages)
 
     return articles
 
@@ -224,7 +226,7 @@ def run_sphinx_build(title=None, max_attempts=3):
             logger.warning("Max attempts reached. Some warnings may still be present.")
 
 
-def make_book(since=YESTERDAY, output_format="epub"):
+def make_book(since=YESTERDAY, output_format="epub", authors_pages: list | None = None) -> None:
     source_path = Path("source")
     md_files = list(source_path.glob("*.md"))
 
@@ -235,6 +237,9 @@ def make_book(since=YESTERDAY, output_format="epub"):
     date = datetime.today()
     title = f"omnivook {since:%Y-%m-%d} to {date:%Y-%m-%d}"
     output = f"{title.replace(' ', '_')}.{output_format}"
+    os.environ.setdefault("PROJECT_NAME", title.replace(' ', '_'))
+    os.environ.setdefault("EPUB_TITLE", title)
+    os.environ.setdefault("EPUB_AUTHORS", ",".join(authors_pages))
     logger.info(f"[bold]Generating {output}")
     run_sphinx_build()
 
