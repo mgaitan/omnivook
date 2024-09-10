@@ -52,13 +52,13 @@ jobs:
         fi
 
         python omnivook.py --since $SINCE_DATE $ARCHIVE_FLAG
-    
-    - name: Set up EPUB file name
+
+    - name: Find EPUB file
       run: |
-        file_name="${{ env.PROJECT_NAME }}.epub"
-        echo "EPUB file name: $file_name"
-        echo "FILE_NAME=$file_name" >> $GITHUB_ENV
-    
+        # Find the EPUB file in _build/epub directory
+        epub_file=$(find _build/epub -name "*.epub" -print -quit)
+        echo "EPUB_FILE=$epub_file" >> $GITHUB_ENV
+  
     - name: Send eBook via email
       uses: dawidd6/action-send-mail@v3
       with:
@@ -76,4 +76,4 @@ jobs:
         body: "Attached is your new Omnivook eBook."
         to: ${{ secrets.MAIL_TO }}
         from: ${{ secrets.MAIL_FROM }}
-        attachments: _build/epub/${{ env.FILE_NAME }}
+        attachments: ${{ env.EPUB_FILE }}
