@@ -52,6 +52,12 @@ jobs:
         fi
 
         python omnivook.py --since $SINCE_DATE $ARCHIVE_FLAG
+
+    - name: Set up EPUB file name
+      run: |
+        file_name="${{ env.PROJECT_NAME }}.epub"
+        echo "EPUB file name: $file_name"
+        echo "FILE_NAME=$file_name" >> $GITHUB_ENV
     
     - name: Send eBook via email
       uses: dawidd6/action-send-mail@v3
@@ -69,4 +75,4 @@ jobs:
         body: "Attached is your new Omnivook eBook."
         to: ${{ secrets.MAIL_TO }}
         from: ${{ secrets.MAIL_FROM }}
-        attachments: _build/epub/omnivook.epub
+        attachments: _build/epub/${{ env.FILE_NAME }}
