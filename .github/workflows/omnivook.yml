@@ -50,8 +50,9 @@ jobs:
         if [ ${{ inputs.archive }} ]; then
           ARCHIVE_FLAG="--archive"
         fi
+        project_name=$(python omnivook.py --since $SINCE_DATE $ARCHIVE_FLAG | grep "PROJECT_NAME=" | cut -d '=' -f2)
+        echo "PROJECT_NAME=$project_name" >> $GITHUB_ENV
 
-        python omnivook.py --since $SINCE_DATE $ARCHIVE_FLAG
 
     - name: Set up EPUB file name
       run: |
