@@ -26,15 +26,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: astral-sh/setup-uv@v2
       with:
-        python-version: '3.12'
-
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        
+        version: "0.4.10"
+     
     - name: Generate eBook
       env:
         OMNIVORE_TOKEN: ${{ secrets.OMNIVORE_TOKEN }}
@@ -50,16 +45,13 @@ jobs:
         if [ ${{ inputs.archive }} ]; then
           ARCHIVE_FLAG="--archive"
         fi
-        project_name=$(python omnivook.py --since $SINCE_DATE $ARCHIVE_FLAG | grep "PROJECT_NAME=" | cut -d '=' -f2)
-        echo "PROJECT_NAME=$project_name" >> $GITHUB_ENV
 
-
-    - name: Set up EPUB file name
-      run: |
-        file_name="${{ env.PROJECT_NAME }}.epub"
-        echo "EPUB file name: $file_name"
-        echo "FILE_NAME=$file_name" >> $GITHUB_ENV
-    
+        LABEL=""
+        if [ ${{ inputs.lable }} ]; then
+          LABEL="--label ${{ inputs.label }}"
+        fi
+        uv run --with-editable . omnivook --since $SINCE_DATE $LABEL $ARCHIVE_FLAG
+        
     - name: Send eBook via email
       uses: dawidd6/action-send-mail@v3
       with:
@@ -76,4 +68,4 @@ jobs:
         body: "Attached is your new Omnivook eBook."
         to: ${{ secrets.MAIL_TO }}
         from: ${{ secrets.MAIL_FROM }}
-        attachments: _build/epub/${{ env.FILE_NAME }}
+        attachments: *.epub
