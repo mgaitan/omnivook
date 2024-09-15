@@ -6,7 +6,7 @@ import shutil
 import subprocess
 from datetime import date, datetime, timedelta
 from pathlib import Path
-import importlib.resources as pkg_resources 
+import importlib.resources as pkg_resources
 
 from omnivoreql import OmnivoreQL
 from rich import print
@@ -26,11 +26,15 @@ __username = None
 
 YESTERDAY = date.today() - timedelta(days=1)
 
+
 def get_client() -> OmnivoreQL:
     global __client
     if __client is None:
-        __client = OmnivoreQL(os.environ.get("OMNIVORE_APIKEY", os.environ.get("OMNIVORE_TOKEN")))
+        __client = OmnivoreQL(
+            os.environ.get("OMNIVORE_APIKEY", os.environ.get("OMNIVORE_TOKEN"))
+        )
     return __client
+
 
 def get_username() -> str:
     global __username
@@ -41,12 +45,12 @@ def get_username() -> str:
 
 def setup_source_folder():
     """Set up a source folder with the necessary Sphinx configuration."""
-    
+
     source_dir = Path("./source")
     with pkg_resources.path("omnivook", "source_template") as source_template:
         shutil.copytree(source_template, source_dir)
     return source_dir
-    
+
 
 def get_articles(labels=None, since=YESTERDAY, archive=False):
     articles = []
@@ -78,7 +82,7 @@ def get_articles(labels=None, since=YESTERDAY, archive=False):
         )["article"]["article"]
 
         node = art["node"]
-        file_path = (source_path / f"{i}_{node['slug']}.md")
+        file_path = source_path / f"{i}_{node['slug']}.md"
         logger.info(f"Processing {node['originalArticleUrl']} -> {file_path}")
         full = (
             f"# {details['title']}\n\n"
@@ -91,6 +95,7 @@ def get_articles(labels=None, since=YESTERDAY, archive=False):
             logger.info("Archiving...")
             client.archive_article(details["id"])
     return articles
+
 
 def extract_warnings(output):
     # Regex to capture the details of the warnings
@@ -108,6 +113,7 @@ def extract_warnings(output):
         warnings.append(warning_data)
 
     return warnings
+
 
 def apply_fix(warning):
     file_path = Path(warning["file"].replace(".md.md", ".md"))
@@ -133,11 +139,15 @@ def apply_fix(warning):
             new_level = from_level + 1 if to_level > from_level else from_level - 1
 
             # Replace the entire header prefix with the new level
-            lines[line_number - 1] = re.sub(r"^#+", "#" * new_level, lines[line_number - 1])
+            lines[line_number - 1] = re.sub(
+                r"^#+", "#" * new_level, lines[line_number - 1]
+            )
 
     elif "cross-reference target" in reason:
         # Case 3: Remove empty cross-reference links
-        logger.info(f"[green]Fixing cross-reference target at {warning['file']}:{warning['line']}")
+        logger.info(
+            f"[green]Fixing cross-reference target at {warning['file']}:{warning['line']}"
+        )
         lines[line_number - 1] = re.sub(r"\[\]\(#.*?\)", "", lines[line_number - 1])
 
     else:
@@ -162,7 +172,14 @@ def run_sphinx_build(source_dir, title=None, max_attempts=3):
             os.environ["EPUB_TITLE"] = title
         # Execute sphinx-build and capture the output
         result = subprocess.run(
-            ["sphinx-build", "--keep-going", "-Eab", "epub", source_dir, str(source_dir / "_build" / "epub")],
+            [
+                "sphinx-build",
+                "--keep-going",
+                "-Eab",
+                "epub",
+                source_dir,
+                str(source_dir / "_build" / "epub"),
+            ],
             text=True,
             stderr=subprocess.PIPE,  # Capture only stderr for warnings
         )
@@ -181,7 +198,9 @@ def run_sphinx_build(source_dir, title=None, max_attempts=3):
             logger.warning("Max attempts reached. Some warnings may still be present.")
 
 
-def make_book(since=YESTERDAY, output_format="epub", authors_pages: list | None = None) -> None:
+def make_book(
+    since=YESTERDAY, output_format="epub", authors_pages: list | None = None
+) -> None:
     source_path = Path("source")
     md_files = list(source_path.glob("*.md"))
 
@@ -192,7 +211,7 @@ def make_book(since=YESTERDAY, output_format="epub", authors_pages: list | None 
     date = datetime.today()
     title = f"omnivook {since:%Y-%m-%d} to {date:%Y-%m-%d}"
     output = f"{title.replace(' ', '_')}.{output_format}"
-    os.environ.setdefault("PROJECT_NAME", title.replace(' ', '_'))
+    os.environ.setdefault("PROJECT_NAME", title.replace(" ", "_"))
     os.environ.setdefault("EPUB_TITLE", title)
     os.environ.setdefault("EPUB_AUTHORS", ",".join(authors_pages or []))
     logger.info(f"[bold]Generating {output}")
@@ -211,10 +230,11 @@ def main():
         description="Generate an ebook from Omnivore articles"
     )
     parser.add_argument(
-        "-v", "--version",
+        "-v",
+        "--version",
         action="version",
-        version=f"%(prog)s {__version__}",  
-        help="Show program's version number and exit"
+        version=f"%(prog)s {__version__}",
+        help="Show program's version number and exit",
     )
     parser.add_argument(
         "--label",
@@ -248,19 +268,27 @@ def main():
     args = parser.parse_args()
 
     if args.mode in ["all", "retrieve"]:
-        articles = get_articles(labels=args.label, since=args.since, archive=args.archive)
-    
+        articles = get_articles(
+            labels=args.label, since=args.since, archive=args.archive
+        )
+
     if args.mode in ["all", "build"]:
-        # in "build" only mode we don't have raw articles list. 
+        # in "build" only mode we don't have raw articles list.
         try:
-            articles_authors_pages = [site_name for art in articles if (site_name := art['node']['siteName'])]
+            articles_authors_pages = [
+                site_name for art in articles if (site_name := art["node"]["siteName"])
+            ]
         except NameError:
             articles_authors_pages = None
-        make_book(since=args.since, output_format=args.output_format, authors_pages=articles_authors_pages)
+        make_book(
+            since=args.since,
+            output_format=args.output_format,
+            authors_pages=articles_authors_pages,
+        )
 
     if args.mode == "all":
         shutil.rmtree("./source")
-    
+
 
 if __name__ == "__main__":
     main()
