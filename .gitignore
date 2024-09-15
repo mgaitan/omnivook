@@ -1,5 +1,4 @@
 .env
 dist/
 *.egg-info/
-uv.lock
 __pycache__/

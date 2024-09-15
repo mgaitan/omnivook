@@ -6,6 +6,7 @@ dependencies = [
     "omnivoreql",
     "sphinx",
     "rich",
+    "myst_parser",
 ]
 dynamic = ["version"]
 
