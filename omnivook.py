@@ -192,10 +192,16 @@ def make_book(since=YESTERDAY, output_format="epub", authors_pages: list | None 
     output = f"{title.replace(' ', '_')}.{output_format}"
     os.environ.setdefault("PROJECT_NAME", title.replace(' ', '_'))
     os.environ.setdefault("EPUB_TITLE", title)
-    os.environ.setdefault("EPUB_AUTHORS", ",".join(authors_pages))
+    os.environ.setdefault("EPUB_AUTHORS", ",".join(authors_pages or []))
     logger.info(f"[bold]Generating {output}")
     print(f"PROJECT_NAME={title.replace(' ', '_')}")
     run_sphinx_build(source_dir=source_path, title=title)
+
+    try:
+        shutil.move(source_path / "_build" / "epub" / output, output)
+        logger.info(f"[bold]Generated {output}")
+    except FileNotFoundError:
+        logger.error("Failed to generate the ebook.")
 
 
 def main():
@@ -233,13 +239,16 @@ def main():
 
     args = parser.parse_args()
 
-     
-    
     if args.mode in ["all", "retrieve"]:
-        get_articles(labels=args.label, since=args.since, archive=args.archive)
+        articles = get_articles(labels=args.label, since=args.since, archive=args.archive)
     
     if args.mode in ["all", "build"]:
-        make_book(since=args.since, output_format=args.output_format)
+        # in "build" only mode we don't have raw articles list. 
+        try:
+            articles_authors_pages = [site_name for art in articles if (site_name := art['node']['siteName'])]
+        except NameError:
+            articles_authors_pages = None
+        make_book(since=args.since, output_format=args.output_format, authors_pages=articles_authors_pages)
 
     if args.mode == "all":
         shutil.rmtree("./source")
