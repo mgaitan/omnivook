@@ -18,32 +18,9 @@ Pass `--help` to see all the options.
 
 Alternatively, you can install `omnivook` with pipx, pip, etc. 
 
+## Automated daily ebook via email ⏰: Setup Github Action
 
-### Automated Daily Run ⏰
-
-
-
-Every article saved in the last day that hasn't been read (`readPosition:<60`) and isn't archived will be sent as a book automatically every day at 17:30 Argentina time (20:30 UTC). 
-
-### Manual Trigger 🔧
-
-You can manually trigger the workflow from the GitHub Actions tab. When triggering manually, you have the following options:
-
-- **SINCE**: Specify the start date to filter articles (format `YYYY-MM-DD`). If not provided, defaults to the previous day.
-- **archive**: A boolean flag (`true` or `false`) that determines whether to archive the articles after processing. Defaults to `true`.
-- **label**: Specify a label to filter articles.
-
-## Features ✨
-
-- **Automated eBook Generation**: The workflow runs daily at 17:30 Argentina time, generating an eBook from the articles saved in Omnivore within the last 24 hours.
-- **Manual Triggering**: You can manually trigger the workflow at any time, with configurable options for the start date (`SINCE`) and whether to archive processed articles.
-- **Conditional Execution**: The workflow checks if any articles were processed and only sends the eBook and uploads it as an artifact if one was generated.
-- **Email Delivery**: The generated eBook is sent directly to a specified Kindle email address.
-
-
-## Setup Github Action (automatic book by email) 🛠️
-
-You need to configure the following [GitHub Secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) in your repository:
+Clone this repo and configure the following [GitHub Secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions) in your repository:
 
 - **`OMNIVORE_APIKEY`**: Get yours at https://omnivore.app/settings/api 
 - **`MAIL_CONNECTION`**: The SMTP connection URL in the format: `smtp://user:password@server:port`. If this is set, you don't need to provide `SERVER`, `USERNAME`, `PASSWORD`, `SERVER_PORT`, or `SECURE`.
@@ -64,3 +41,11 @@ You can overwrite these environment variables if you want to change the dynamic 
 - **`PROJECT_NAME`** = a.k.a the file name of the epub. Default to omnivook_since_`<DATE>`_to_`<DATE>`.epub
 - **`EPUB_TITLE`**: a.k.a the title of the document. Default to omnivook since `<DATE>` to `<DATE>`
 - **`EPUB_AUTHORS`**: a.k.a  List of site names of all the articles. Default set to the repo owner
+
+### Manual Trigger 🔧
+
+You can manually trigger the workflow from the GitHub Actions tab. When triggering manually, you have the following options:
+
+-- **SINCE**: Specify the start date to filter articles (format `YYYY-MM-DD`). If not provided, defaults to the previous day.
+-- **archive**: A boolean flag (`true` or `false`) that determines whether to archive the articles after processing. Defaults to `true`.
+-- **label**: (optional) Specify a label to filter articles.
