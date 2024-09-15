@@ -4,12 +4,12 @@ import os
 import re
 import shutil
 import subprocess
-import tempfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
 import importlib.resources as pkg_resources 
 
 from omnivoreql import OmnivoreQL
+from rich import print
 from rich.logging import RichHandler
 
 logging.basicConfig(
@@ -27,7 +27,7 @@ YESTERDAY = date.today() - timedelta(days=1)
 def get_client() -> OmnivoreQL:
     global __client
     if __client is None:
-        __client = OmnivoreQL(os.environ.get("OMNIVORE_TOKEN"))
+        __client = OmnivoreQL(os.environ.get("OMNIVORE_APIKEY", os.environ.get("OMNIVORE_TOKEN")))
     return __client
 
 def get_username() -> str:
@@ -38,14 +38,12 @@ def get_username() -> str:
 
 
 def setup_source_folder():
-    """Set up a temporary folder with the necessary Sphinx configuration."""
-    temp_dir = Path(tempfile.mkdtemp())
-
-    # Acceder a los archivos del directorio `source_template` dentro del paquete
+    """Set up a source folder with the necessary Sphinx configuration."""
+    
+    source_dir = Path("./source")
     with pkg_resources.path("omnivook", "source_template") as source_template:
-        shutil.copytree(source_template, temp_dir / "source")
-
-    return temp_dir
+        shutil.copytree(source_template, source_dir)
+    return source_dir
     
 
 def get_articles(labels=None, since=YESTERDAY, archive=False):
@@ -71,13 +69,14 @@ def get_articles(labels=None, since=YESTERDAY, archive=False):
             logger.info(f"{len(articles)} articles retrieved")
             break
 
+    source_path = setup_source_folder()
     for i, art in enumerate(articles):
         details = client.get_article(
             get_username(), art["node"]["slug"], format="markdown", include_content=True
         )["article"]["article"]
 
         node = art["node"]
-        file_path = (Path("source") / f"{i}_{node['slug']}.md")
+        file_path = (source_path / f"{i}_{node['slug']}.md")
         logger.info(f"Processing {node['originalArticleUrl']} -> {file_path}")
         full = (
             f"# {details['title']}\n\n"
@@ -180,9 +179,8 @@ def run_sphinx_build(source_dir, title=None, max_attempts=3):
             logger.warning("Max attempts reached. Some warnings may still be present.")
 
 
-def make_book(since=YESTERDAY, output_format="epub"):
-    temp_dir = setup_source_folder()  # Set up temporary source folder
-    source_path = temp_dir / "source"
+def make_book(since=YESTERDAY, output_format="epub", authors_pages: list | None = None) -> None:
+    source_path = Path("source")
     md_files = list(source_path.glob("*.md"))
 
     if len(md_files) <= 1:  # only index.md
@@ -192,7 +190,11 @@ def make_book(since=YESTERDAY, output_format="epub"):
     date = datetime.today()
     title = f"omnivook {since:%Y-%m-%d} to {date:%Y-%m-%d}"
     output = f"{title.replace(' ', '_')}.{output_format}"
+    os.environ.setdefault("PROJECT_NAME", title.replace(' ', '_'))
+    os.environ.setdefault("EPUB_TITLE", title)
+    os.environ.setdefault("EPUB_AUTHORS", ",".join(authors_pages))
     logger.info(f"[bold]Generating {output}")
+    print(f"PROJECT_NAME={title.replace(' ', '_')}")
     run_sphinx_build(source_dir=source_path, title=title)
 
 
@@ -231,21 +233,17 @@ def main():
 
     args = parser.parse_args()
 
-    temp_dir = setup_source_folder()  # Set up the temporary folder
-    os.chdir(temp_dir / "source")  # Change to the source directory
-
+     
+    
     if args.mode in ["all", "retrieve"]:
-        articles = get_articles(
-            labels=args.label, since=args.since, archive=args.archive
-        )
-    else:
-        articles = None
-
+        get_articles(labels=args.label, since=args.since, archive=args.archive)
+    
     if args.mode in ["all", "build"]:
         make_book(since=args.since, output_format=args.output_format)
 
-    return articles
-
+    if args.mode == "all":
+        shutil.rmtree("./source")
+    
 
 if __name__ == "__main__":
     main()
