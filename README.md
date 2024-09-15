@@ -3,9 +3,25 @@
 Automates the process of generating an eBook from [Omnivore](https://omnivore.app/) articles and sending it via email to your Kindle device.
 
 
-## Usage 🚀
+## Usage
+
+The easiest way of running the latest version is using [uv](https://docs.astral.sh/uv/getting-started/installation/). 
+
+```bash
+OMNIVORE_APIKEY=<key> uvx omnivook
+```
+
+By default it will generate an epub with the last 24 hours articles in the same directory.  
+
+Pass `--help` to see all the options.
+
+
+Alternatively, you can install `omnivook` with pipx, pip, etc. 
+
 
 ### Automated Daily Run ⏰
+
+
 
 Every article saved in the last day that hasn't been read (`readPosition:<60`) and isn't archived will be sent as a book automatically every day at 17:30 Argentina time (20:30 UTC). 
 
