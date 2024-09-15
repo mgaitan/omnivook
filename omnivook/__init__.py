@@ -12,6 +12,8 @@ from omnivoreql import OmnivoreQL
 from rich import print
 from rich.logging import RichHandler
 
+__version__ = "0.1.3"
+
 logging.basicConfig(
     level="DEBUG",
     handlers=[RichHandler(show_time=False, markup=True)],
@@ -207,6 +209,12 @@ def make_book(since=YESTERDAY, output_format="epub", authors_pages: list | None 
 def main():
     parser = argparse.ArgumentParser(
         description="Generate an ebook from Omnivore articles"
+    )
+    parser.add_argument(
+        "-v", "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",  
+        help="Show program's version number and exit"
     )
     parser.add_argument(
         "--label",
