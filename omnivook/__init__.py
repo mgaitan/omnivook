@@ -52,13 +52,18 @@ def setup_source_folder():
     return source_dir
 
 
-def get_articles(labels=None, since=YESTERDAY, archive=False):
+def get_articles(labels=None, exclude_labels=None, since=YESTERDAY, archive=False):
     articles = []
     after = 0
     query = f"in:inbox saved:{since.strftime('%Y-%m-%d')}..* readPosition:<60 sort:saved-desc"
+    
     if labels:
         label_query = " ".join(f"label:{label}" for label in labels)
         query += f" {label_query}"
+
+    if exclude_labels:
+        exclude_query = " ".join(f"-label:{label}" for label in exclude_labels)
+        query += f" {exclude_query}"
 
     client = get_client()
     while True:
@@ -93,7 +98,7 @@ def get_articles(labels=None, since=YESTERDAY, archive=False):
 
         if archive:
             logger.info("Archiving...")
-            client.archive_article(details["id"])
+            client.archive_article(details["id"])    
     return articles
 
 
@@ -237,16 +242,23 @@ def main():
         help="Show program's version number and exit",
     )
     parser.add_argument(
+        "--since",
+        type=lambda s: datetime.strptime(s, "%Y-%m-%d").date(),
+        default=YESTERDAY,
+        help="Start date to filter articles (format YYYY-MM-DD)",
+    )
+    
+    parser.add_argument(
         "--label",
         type=str,
         nargs="*",
         help="Labels to filter articles (optional, can be multiple)",
     )
     parser.add_argument(
-        "--since",
-        type=lambda s: datetime.strptime(s, "%Y-%m-%d").date(),
-        default=YESTERDAY,
-        help="Start date to filter articles (format YYYY-MM-DD)",
+        "--exclude-label",
+        type=str,
+        nargs="*",
+        help="Labels to exclude articles (optional, can be multiple)",
     )
     parser.add_argument(
         "-o",
@@ -269,7 +281,7 @@ def main():
 
     if args.mode in ["all", "retrieve"]:
         articles = get_articles(
-            labels=args.label, since=args.since, archive=args.archive
+            labels=args.label, exclude_labels=args.exclude_label,  since=args.since, archive=args.archive
         )
 
     if args.mode in ["all", "build"]:
