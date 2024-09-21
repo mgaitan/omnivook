@@ -250,15 +250,19 @@ def main():
     
     parser.add_argument(
         "--label",
-        type=str,
-        nargs="*",
-        help="Labels to filter articles (optional, can be multiple)",
+        type=lambda s: [label.strip() for label in s.split(',')],
+        help="Comma-separated labels to filter articles (optional)",
     )
+
     parser.add_argument(
         "--exclude-label",
-        type=str,
-        nargs="*",
-        help="Labels to exclude articles (optional, can be multiple)",
+        type=lambda s: [label.strip() for label in s.split(',')],
+        help="Comma-separated labels to exclude articles (optional)",
+    )
+    parser.add_argument(
+        "--add-label",
+        type=lambda s: [label.strip() for label in s.split(',')],
+        help="Comma-separated labels to add to exported articles",
     )
     parser.add_argument(
         "-o",
@@ -281,7 +285,7 @@ def main():
 
     if args.mode in ["all", "retrieve"]:
         articles = get_articles(
-            labels=args.label, exclude_labels=args.exclude_label,  since=args.since, archive=args.archive
+            since=args.since, labels=args.label, exclude_labels=args.exclude_label, add_labels=args.add_label, archive=args.archive
         )
 
     if args.mode in ["all", "build"]:
