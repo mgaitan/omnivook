@@ -52,11 +52,13 @@ def setup_source_folder():
     return source_dir
 
 
-def get_articles(since=YESTERDAY, labels=None, exclude_labels=None, add_labels=None, archive=False):
+def get_articles(
+    since=YESTERDAY, labels=None, exclude_labels=None, add_labels=None, archive=False
+):
     articles = []
     after = 0
     query = f"in:inbox saved:{since.strftime('%Y-%m-%d')}..* readPosition:<60 sort:saved-desc"
-    
+
     if labels:
         label_query = " ".join(f"label:{label}" for label in labels)
         query += f" {label_query}"
@@ -97,15 +99,17 @@ def get_articles(since=YESTERDAY, labels=None, exclude_labels=None, add_labels=N
         file_path.write_text(full)
 
         if add_labels:
-            parsed_labels = [{"name": label, "color": "#0000FF", "description": ""} for label in add_labels]
+            parsed_labels = [
+                {"name": label, "color": "#0000FF", "description": ""}
+                for label in add_labels
+            ]
             client.set_page_labels_by_fields(
-                page_id=details["id"],
-                labels=parsed_labels
+                page_id=details["id"], labels=parsed_labels
             )
 
         if archive:
             logger.info("Archiving...")
-            client.archive_article(details["id"])    
+            client.archive_article(details["id"])
     return articles
 
 
@@ -254,21 +258,21 @@ def main():
         default=YESTERDAY,
         help="Start date to filter articles (format YYYY-MM-DD)",
     )
-    
+
     parser.add_argument(
         "--label",
-        type=lambda s: [label.strip() for label in s.split(',')],
+        type=lambda s: [label.strip() for label in s.split(",")],
         help="Comma-separated labels to filter articles (optional)",
     )
 
     parser.add_argument(
         "--exclude-label",
-        type=lambda s: [label.strip() for label in s.split(',')],
+        type=lambda s: [label.strip() for label in s.split(",")],
         help="Comma-separated labels to exclude articles (optional)",
     )
     parser.add_argument(
         "--add-label",
-        type=lambda s: [label.strip() for label in s.split(',')],
+        type=lambda s: [label.strip() for label in s.split(",")],
         help="Comma-separated labels to add to exported articles",
     )
     parser.add_argument(
@@ -292,7 +296,11 @@ def main():
 
     if args.mode in ["all", "retrieve"]:
         articles = get_articles(
-            since=args.since, labels=args.label, exclude_labels=args.exclude_label, add_labels=args.add_label, archive=args.archive
+            since=args.since,
+            labels=args.label,
+            exclude_labels=args.exclude_label,
+            add_labels=args.add_label,
+            archive=args.archive,
         )
 
     if args.mode in ["all", "build"]:
