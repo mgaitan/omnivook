@@ -52,7 +52,7 @@ def setup_source_folder():
     return source_dir
 
 
-def get_articles(labels=None, exclude_labels=None, since=YESTERDAY, archive=False):
+def get_articles(since=YESTERDAY, labels=None, exclude_labels=None, add_labels=None, archive=False):
     articles = []
     after = 0
     query = f"in:inbox saved:{since.strftime('%Y-%m-%d')}..* readPosition:<60 sort:saved-desc"
@@ -95,6 +95,13 @@ def get_articles(labels=None, exclude_labels=None, since=YESTERDAY, archive=Fals
             f"{details['content']}\n"
         )
         file_path.write_text(full)
+
+        if add_labels:
+            parsed_labels = [{"name": label, "color": "#0000FF", "description": ""} for label in add_labels]
+            client.set_page_labels_by_fields(
+                page_id=details["id"],
+                labels=parsed_labels
+            )
 
         if archive:
             logger.info("Archiving...")
