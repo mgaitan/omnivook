@@ -7,11 +7,36 @@ Automates the process of generating an eBook from [Omnivore](https://omnivore.ap
 
 The easiest way of running the latest version is using [uv](https://docs.astral.sh/uv/getting-started/installation/). 
 
+For a one-time run:
+
+
 ```bash
 OMNIVORE_APIKEY=<key> uvx omnivook
 ```
 
-By default it will generate an epub with the last 24 hours articles in the same directory.  
+To install it permanently, use
+
+
+```bash
+uv tool install omnivook
+```
+
+
+To upgrade it:
+
+```bash
+uv tool upgrade omnivook
+```
+
+
+Then simply run 
+
+```bash
+OMNIVORE_APIKEY=<key> omnivook
+```
+
+
+By default it will generate an epub with the articles since the day before.  
 
 Pass `--help` to see all the options.
 
@@ -46,6 +71,6 @@ You can overwrite these environment variables if you want to change the dynamic 
 
 You can manually trigger the workflow from the GitHub Actions tab. When triggering manually, you have the following options:
 
--- **SINCE**: Specify the start date to filter articles (format `YYYY-MM-DD`). If not provided, defaults to the previous day.
--- **archive**: A boolean flag (`true` or `false`) that determines whether to archive the articles after processing. Defaults to `true`.
--- **label**: (optional) Specify a label to filter articles.
+- **SINCE**: Specify the start date to filter articles (format `YYYY-MM-DD`). If not provided, defaults to the previous day.
+- **archive**: A boolean flag (`true` or `false`) that determines whether to archive the articles after processing. Defaults to `true`.
+- **label**: (optional) Specify a label to filter articles.
