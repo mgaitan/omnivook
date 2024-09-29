@@ -53,6 +53,7 @@ jobs:
         uv run --with-editable . omnivook --since $SINCE_DATE $LABEL $ARCHIVE_FLAG
         
     - name: Send eBook via email
+      if: success() # Only run if previous step succeded
       uses: dawidd6/action-send-mail@v3
       with:
         # setup your mail server connection
