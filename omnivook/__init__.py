@@ -142,7 +142,7 @@ def apply_fix(warning):
     # Reading the file with pathlib
     lines = file_path.read_text().splitlines()
 
-    if "lexer" in reason:
+    if "lexer" in reason or "Lexing literal_block":
         # Case 1: Remove everything after "```" on the specific line
         logger.info(f"[green]Fixing lexer at {warning['file']}:{warning['line']}")
         lines[line_number - 1] = re.sub(r"```.*", "```", lines[line_number - 1])
