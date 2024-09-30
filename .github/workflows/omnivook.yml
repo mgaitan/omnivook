@@ -12,10 +12,19 @@ on:
       label:
         description: 'Label to filter'
         required: false
+      exclude_label:
+        description: 'Labels to exclude'
+        required: false
+      add_label:
+        description: 'Label to add to exported articles'
+        required: false
+      extra_filter:
+        description: 'Extra filter to apply (e.g., "language:spanish")'
+        required: false
       archive:
         description: 'Archive exported articles'
         type: boolean
-        default: true # default is true; can be set to false
+        default: true
 
 jobs:
   generate_and_send_ebook:
@@ -47,10 +56,27 @@ jobs:
         fi
 
         LABEL=""
-        if [ ${{ inputs.lable }} ]; then
-          LABEL="--label ${{ inputs.label }}"
+        if [ -n "${{ inputs.label }}" ]; then
+          LABEL="--label \"${{ inputs.label }}\""
         fi
-        uv run --with-editable . omnivook --since $SINCE_DATE $LABEL $ARCHIVE_FLAG
+
+        EXCLUDE_LABEL=""
+        if [ -n "${{ inputs.exclude_label }}" ]; then
+          EXCLUDE_LABEL="--exclude-label \"${{ inputs.exclude_label }}\""
+        fi
+
+        ADD_LABEL="--add-label \"omnivook-${GITHUB_RUN_ID}\""
+        if [ -n "${{ inputs.add_label }}" ]; then
+          ADD_LABEL="--add-label \"${{ inputs.add_label }},omnivook-${GITHUB_RUN_ID}\""
+        fi
+
+        EXTRA_FILTER=""
+        if [ -n "${{ inputs.extra_filter }}" ]; then
+          EXTRA_FILTER="--filter \"${{ inputs.extra_filter }}\""
+        fi
+
+        uv run --with-editable . omnivook --since $SINCE_DATE $LABEL $EXCLUDE_LABEL $ADD_LABEL $EXTRA_FILTER $ARCHIVE_FLAG
+        
         
     - name: Send eBook via email
       if: success() # Only run if previous step succeded
