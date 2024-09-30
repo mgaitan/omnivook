@@ -12,7 +12,7 @@ from omnivoreql import OmnivoreQL
 from rich import print
 from rich.logging import RichHandler
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 logging.basicConfig(
     level="DEBUG",
