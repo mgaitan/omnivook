@@ -53,7 +53,7 @@ def setup_source_folder():
 
 
 def get_articles(
-    since=YESTERDAY, labels=None, exclude_labels=None, add_labels=None, archive=False
+    since=YESTERDAY, labels=None, exclude_labels=None, add_labels=None, archive=False, extra_filters=None
 ):
     articles = []
     after = 0
@@ -66,6 +66,9 @@ def get_articles(
     if exclude_labels:
         exclude_query = " ".join(f"-label:{label}" for label in exclude_labels)
         query += f" {exclude_query}"
+
+    if extra_filters:
+        query += f" {extra_filters}"
 
     client = get_client()
     while True:
@@ -274,6 +277,11 @@ def main():
         "--add-label",
         type=lambda s: [label.strip() for label in s.split(",")],
         help="Comma-separated labels to add to exported articles",
+    )
+    parser.add_argument(
+        "--extra-filter",
+        type=str,
+        help="Extra filter/s to apply to the search (e.g., 'language:spanish in:library')",
     )
     parser.add_argument(
         "-o",
