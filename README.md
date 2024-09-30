@@ -41,7 +41,24 @@ By default it will generate an epub with the articles since the day before.
 Pass `--help` to see all the options.
 
 
-Alternatively, you can install `omnivook` with pipx, pip, etc. 
+## Advanced CLI examples
+
+The Omnivook CLI allows you to apply powerful filters to refine the content of your ebook using `--extra-filter` 
+
+For example, you can filter articles from [cenital.com](https://cenital.com) in Spanish:
+
+```bash
+OMNIVORE_APIKEY=<key> omnivook --extra-filter "site:cenital.com language:spanish"
+```
+
+Or ignore RSS feeds and newsletters:
+
+```bash
+OMNIVORE_APIKEY=<key> omnivook --extra-filter "in:library"
+```
+
+For more filter options, visit the [Omnivore search documentation](https://docs.omnivore.app/using/search.html).
+
 
 ## Automated daily ebook via email ⏰: Setup Github Action
 
