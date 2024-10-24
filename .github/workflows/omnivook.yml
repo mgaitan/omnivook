@@ -40,6 +40,7 @@ jobs:
         version: "0.4.10"
      
     - name: Generate eBook
+      id: run_omnivook
       env:
         OMNIVORE_TOKEN: ${{ secrets.OMNIVORE_TOKEN }}
         FORCE_COLOR: 1
@@ -75,11 +76,18 @@ jobs:
           EXTRA_FILTER="--filter \"${{ inputs.extra_filter }}\""
         fi
 
-        uv run --with-editable . omnivook --since $SINCE_DATE $LABEL $EXCLUDE_LABEL $ADD_LABEL $EXTRA_FILTER $ARCHIVE_FLAG
+        # Run
+        output=$(uv run --with-editable . omnivook --since $SINCE_DATE $LABEL $EXCLUDE_LABEL $ADD_LABEL $EXTRA_FILTER $ARCHIVE_FLAG)
+        # Capture last line
+        last_line=$(echo "$output" | tail -n 1)
+
+        echo "Last line: $last_line"
+        # Set the last line as an output
+        echo "last_line=$last_line" >> $GITHUB_OUTPUT
         
         
     - name: Send eBook via email
-      if: success() # Only run if previous step succeded
+      if: ${{ !contains(steps.run_omnivook.outputs.last_line, 'ERROR') }}
       uses: dawidd6/action-send-mail@v3
       with:
         # setup your mail server connection
@@ -96,3 +104,10 @@ jobs:
         to: ${{ secrets.MAIL_TO }}
         from: ${{ secrets.MAIL_FROM }}
         attachments: "*.epub"
+
+    - name: No eBook send
+      env:
+        OUTPUT_LAST_LINE: ${{steps.run_omnivook.outputs.last_line}}
+      if: ${{ contains(steps.run_omnivook.outputs.last_line, 'ERROR') }}
+      run: |
+        echo "No saved today or an Error ocurred: $OUTPUT_LAST_LINE"
